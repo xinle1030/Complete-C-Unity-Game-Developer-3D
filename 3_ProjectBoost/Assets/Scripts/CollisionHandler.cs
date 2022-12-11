@@ -5,6 +5,8 @@ using UnityEngine.SceneManagement;
 public class CollisionHandler : MonoBehaviour
 {
     [SerializeField] float levelLoadDelay = 2f;
+
+    // add the audioclips in the GUI for success and crash
     [SerializeField] AudioClip success;
     [SerializeField] AudioClip crash;
 
@@ -38,6 +40,7 @@ public class CollisionHandler : MonoBehaviour
         } 
     }
 
+    // callback function that will be triggered upon collision
     void OnCollisionEnter(Collision other) 
     {
         if (isTransitioning || collisionDisabled) { return; }
@@ -56,30 +59,44 @@ public class CollisionHandler : MonoBehaviour
         }
     }
 
+    /*
+    Invoke() allows us to call a method so it executes after a delay of x seconds
+    Invoke("MethodName", delayInSeconds)
+    */
+
     void StartSuccessSequence()
     {
         isTransitioning = true;
-        audioSource.Stop();
-        audioSource.PlayOneShot(success);
-        successParticles.Play();
-        GetComponent<Movement>().enabled = false;
+        audioSource.Stop();                         // stop all sound source
+        audioSource.PlayOneShot(success);           // play success audio source
+        successParticles.Play();                    // emit success particles
+        GetComponent<Movement>().enabled = false;   // disable Movement script when move to next level
         Invoke("LoadNextLevel", levelLoadDelay);
     }
 
     void StartCrashSequence()
     {
         isTransitioning = true;
-        audioSource.Stop();
-        audioSource.PlayOneShot(crash);
-        crashParticles.Play();
-        GetComponent<Movement>().enabled = false;
-        Invoke("ReloadLevel", levelLoadDelay);
+        audioSource.Stop();                         // stop all sound source
+        audioSource.PlayOneShot(crash);             // play crash audio source
+        crashParticles.Play();                      // emit crash particles
+        GetComponent<Movement>().enabled = false;   // disable Movement script when crash into obstacle
+        Invoke("ReloadLevel", levelLoadDelay);      // reload and restart current scene
     }
+
+    /*
+    Use SceneManager.LoadScene()
+    -> to load current scene, therefore respawning our rocket ship to when it collides with the ground
+    -> need to use "using UnityEngine.SceneManagement;" namespace
+    */
 
     void LoadNextLevel()
     {
         int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
-        int nextSceneIndex = currentSceneIndex + 1;
+        int nextSceneIndex = currentSceneIndex + 1; // get next scene index
+
+        // if get over the end of the level, return to first level
+        // .sceneCountInBuildSettings means total number of scenes
         if (nextSceneIndex == SceneManager.sceneCountInBuildSettings)
         {
             nextSceneIndex = 0;
@@ -89,6 +106,7 @@ public class CollisionHandler : MonoBehaviour
 
     void ReloadLevel()
     {
+        // get current scene index
         int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
         SceneManager.LoadScene(currentSceneIndex);
     }
